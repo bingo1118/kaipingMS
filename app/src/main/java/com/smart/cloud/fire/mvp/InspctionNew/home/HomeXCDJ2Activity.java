@@ -13,6 +13,9 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.OrientationHelper;
+import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ProgressBar;
@@ -25,8 +28,10 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.baidu.location.BDLocation;
 import com.baidu.location.BDLocationListener;
+import com.smart.cloud.fire.adapter.XCDJInfoAdapter;
 import com.smart.cloud.fire.global.ConstantValues;
 import com.smart.cloud.fire.global.MyApp;
+import com.smart.cloud.fire.global.XCDJInfo;
 import com.smart.cloud.fire.service.LocationService;
 import com.smart.cloud.fire.utils.ImageUtils;
 import com.smart.cloud.fire.utils.SharedPreferencesManager;
@@ -63,8 +68,8 @@ public class HomeXCDJ2Activity extends Activity {
     EditText wwdwmc_et;
     @Bind(R.id.xcdwmc_et)
     EditText xcdwmc_et;
-    @Bind(R.id.xcry_et)
-    EditText xcry_et;
+    @Bind(R.id.xcry_sigh_view)
+    AddSighView xcry_sigh_view;
     @Bind(R.id.xcqk_et)
     EditText xcqk_et;
     @Bind(R.id.clyj_et)
@@ -77,6 +82,8 @@ public class HomeXCDJ2Activity extends Activity {
     RelativeLayout addFireDevBtn;//添加设备按钮。。
     @Bind(R.id.mProgressBar)
     ProgressBar mProgressBar;//加载进度。。
+    @Bind(R.id.recycler_view)
+    RecyclerView recycler_view;
 
     @Bind(R.id.take_photo_view)
     TakePhotosView take_photo_view;
@@ -88,8 +95,15 @@ public class HomeXCDJ2Activity extends Activity {
     private String areaId;//@@9.27
     private String uploadTime;
 
+    XCDJInfoAdapter mAdapter;
+
     List<Photo> sighPhotos = new ArrayList<>();
+    List<Photo> xcrysighPhotos = new ArrayList<>();
     List<Photo> photos = new ArrayList<>();
+
+    private List<XCDJInfo> listQ;
+    String xcjlstring = "";
+    String photoString = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -109,14 +123,49 @@ public class HomeXCDJ2Activity extends Activity {
     String pathtemp;
     int nowIndex;
     int nowIndexSigh;
+    int nowIndexQ;
     String photonametemp;
     String pathParent;
     private String signName = "";
     Uri imageFileUri;
 
     private void initView() {
+        listQ = new ArrayList<>();
+        listQ.add(new XCDJInfo());
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(mContext);
+        linearLayoutManager.setOrientation(OrientationHelper.VERTICAL);
+        recycler_view.setLayoutManager(linearLayoutManager);
+        mAdapter = new XCDJInfoAdapter(mContext, listQ);
+        mAdapter.setmOnClickListener(new XCDJInfoAdapter.OnClickListener() {
+            @Override
+            public void onItemClick(int position) {
+                nowIndexQ = position;
+                photonametemp = System.currentTimeMillis() + "";
+                pathParent = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator
+                        + "uploadtemp" + File.separator;
+                File fileParent = new File(pathParent);
+                if (!fileParent.exists()) {
+                    fileParent.mkdirs();
+                }
+                pathtemp = pathParent + photonametemp + ".jpg";
+                File file = new File(pathtemp);
+                if (!file.exists()) {
+                    try {
+                        file.createNewFile();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+                Uri imageFileUri = Uri.fromFile(file);//获取文件的Uri
+                Intent it = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);//跳转到相机Activity
+                it.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, imageFileUri);//告诉相机拍摄完毕输出图片到指定的Uri
+                ((Activity) mContext).startActivityForResult(it, 148);
+            }
+        });
+        recycler_view.setAdapter(mAdapter);
+
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd-HH:mm:ss");
-        String t=format.format(new Date());
+        String t = format.format(new Date());
         xcsj_et.setText(t);
 
         add_sigh_view.setmList(sighPhotos, true);
@@ -154,21 +203,56 @@ public class HomeXCDJ2Activity extends Activity {
             }
         });
 
-        take_photo_view.setmList(sighPhotos, true);
+        xcry_sigh_view.setmList(sighPhotos, true);
+        xcry_sigh_view.setmOnClickListener(new AddSighView.OnClickListener() {
+            @Override
+            public void onItemClick(int position) {
+                nowIndexSigh = position;
+                photonametemp = System.currentTimeMillis() + "";
+                pathParent = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator
+                        + "uploadtemp" + File.separator;
+                File fileParent = new File(pathParent);
+                if (!fileParent.exists()) {
+                    fileParent.mkdirs();
+                }
+                pathtemp = pathParent + photonametemp + ".jpg";
+                File file = new File(pathtemp);
+                if (!file.exists()) {
+                    try {
+                        file.createNewFile();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+                imageFileUri = Uri.fromFile(file);//获取文件的Uri
+                Intent intent_sigh = new Intent(mContext, SignatureActivity.class);
+                intent_sigh.putExtra("path", imageFileUri);
+                startActivityForResult(intent_sigh, 167);
+            }
+        });
+        xcry_sigh_view.setmOnLongClickListener(new AddSighView.OnLongClickListener() {
+            @Override
+            public void onItemLongClick(Photo photo, int i) {
+                sighPhotos.remove(i);
+                add_sigh_view.setmList(sighPhotos, true);
+            }
+        });
+
+        take_photo_view.setmList(photos, true);
         take_photo_view.setmOnClickListener2(new TakePhotosView.OnClickListener2() {
             @Override
             public void onItemClick(int position) {
-                nowIndex=position;
-                photonametemp = System.currentTimeMillis()+"";
-                pathParent= Environment.getExternalStorageDirectory().getAbsolutePath()+File.separator
-                        +"uploadtemp"+File.separator;
-                File fileParent=new File(pathParent);
-                if(!fileParent.exists()){
+                nowIndex = position;
+                photonametemp = System.currentTimeMillis() + "";
+                pathParent = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator
+                        + "uploadtemp" + File.separator;
+                File fileParent = new File(pathParent);
+                if (!fileParent.exists()) {
                     fileParent.mkdirs();
                 }
-                pathtemp= pathParent+photonametemp+".jpg";
-                File file=new File(pathtemp);
-                if(!file.exists()){
+                pathtemp = pathParent + photonametemp + ".jpg";
+                File file = new File(pathtemp);
+                if (!file.exists()) {
                     try {
                         file.createNewFile();
                     } catch (IOException e) {
@@ -178,7 +262,7 @@ public class HomeXCDJ2Activity extends Activity {
                 Uri imageFileUri = Uri.fromFile(file);//获取文件的Uri
                 Intent it = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);//跳转到相机Activity
                 it.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, imageFileUri);//告诉相机拍摄完毕输出图片到指定的Uri
-                ((Activity)mContext).startActivityForResult(it, 147);
+                ((Activity) mContext).startActivityForResult(it, 147);
             }
         });
         take_photo_view.setmOnLongClickListener(new TakePhotosView.OnLongClickListener() {
@@ -193,6 +277,14 @@ public class HomeXCDJ2Activity extends Activity {
         addFireDevBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                for (int i = 0; i < listQ.size(); i++) {
+                    View view = recycler_view.getChildAt(i);
+                    EditText et1 = view.findViewById(R.id.title_et);
+                    EditText et2 = view.findViewById(R.id.desc_et);
+                    listQ.get(i).setTitle(et1.getText().toString());
+                    listQ.get(i).setDesc(et2.getText().toString());
+                }
+
                 showProgressBarOnUiThread();
                 if (wwdwmc_et.getText() == null || xcdwmc_et.getText().toString().equals("")) {
                     T.showShort(mContext, "请先录入信息");
@@ -232,8 +324,46 @@ public class HomeXCDJ2Activity extends Activity {
                                         dismissProgressBarOnUiThread();
                                         return;
                                     }
-                                    showToastOnUiThread( "巡查图片上传完成");
+                                    showToastOnUiThread("巡查图片上传完成");
                                 }//@@11.07
+                            }
+
+                            for (int i = 0; i < xcrysighPhotos.size(); i++) {
+                                File file = new File(xcrysighPhotos.get(i).getPath());
+                                if (file.exists()) {
+                                    signName = xcrysighPhotos.get(i).getName();
+                                    if (UploadUtil.uploadFile(file, userID, areaId, signName, "", "registration")) {
+                                    } else {
+                                        showToastOnUiThread("巡查人员签名上传失败");
+                                        dismissProgressBarOnUiThread();
+                                        return;
+                                    }
+                                    showToastOnUiThread("巡查人员签名上传完成");
+                                }//@@11.07
+                            }
+
+
+
+                            for (int i = 0; i < listQ.size(); i++) {
+                                xcjlstring = xcjlstring+(i+1)+"."+listQ.get(i).getTitle()
+                                        +"<br>&nbsp&nbsp"+listQ.get(i).getDesc()+"<br><br>";
+                                for (int j = 0; j < listQ.get(i).getMlist().size(); j++) {
+                                    photoString += listQ.get(i).getMlist().get(j).getName() + ".jpg";
+                                    if (!(i == (photos.size() - 1)&&j==(listQ.get(i).getMlist().size()-1))) {
+                                        photoString += "#";
+                                    }
+                                    File file = new File(listQ.get(i).getMlist().get(j).getPath());
+                                    if (file.exists()) {
+                                        signName = listQ.get(i).getMlist().get(j).getName();
+                                        if (UploadUtil.uploadFile(file, userID, areaId, signName, "", "registration")) {
+                                        } else {
+                                            showToastOnUiThread("巡查详情上传失败");
+                                            dismissProgressBarOnUiThread();
+                                            return;
+                                        }
+                                        showToastOnUiThread("巡查详情上传完成");
+                                    }//@@11.07
+                                }
                             }
                         }
 
@@ -244,23 +374,31 @@ public class HomeXCDJ2Activity extends Activity {
                         String sighString = "";
                         for (int i = 0; i < sighPhotos.size(); i++) {
                             sighString += sighPhotos.get(i).getName() + ".jpg";
-                            if (i != (sighPhotos.size()-1)) {
+                            if (i != (sighPhotos.size() - 1)) {
                                 sighString += "#";
                             }
                         }
 
-                        String photoString = "";
-                        for (int i = 0; i < photos.size(); i++) {
-                            photoString += photos.get(i).getName() + ".jpg";
-                            if (i != (photos.size()-1)) {
-                                photoString += "#";
+
+//                        for (int i = 0; i < photos.size(); i++) {
+//                            photoString += photos.get(i).getName() + ".jpg";
+//                            if (i != (photos.size()-1)) {
+//                                photoString += "#";
+//                            }
+//                        }
+
+                        String xcryphotoString = "";
+                        for (int i = 0; i < xcrysighPhotos.size(); i++) {
+                            xcryphotoString += xcrysighPhotos.get(i).getName() + ".jpg";
+                            if (i != (xcrysighPhotos.size() - 1)) {
+                                xcryphotoString += "#";
                             }
                         }
                         url = ConstantValues.SERVER_IP_NEW + "saveInspectionInfo?importname=" + URLEncoder.encode(wwdwmc_et.getText().toString())
                                 + "&inspectname=" + URLEncoder.encode(xcdwmc_et.getText().toString())
-                                + "&inspectperson=" + URLEncoder.encode(xcry_et.getText().toString())
+                                + "&inspectperson=" + URLEncoder.encode(xcryphotoString)
                                 + "&inspecttime=" + xcsj_et.getText().toString()
-                                + "&inspecttext=" + URLEncoder.encode(xcqk_et.getText().toString())
+                                + "&inspecttext=" + URLEncoder.encode(xcjlstring)
                                 + "&dealidea=" + URLEncoder.encode(clyj_et.getText().toString())
                                 + "&chargeperson=" + URLEncoder.encode(sighString)
                                 + "&telphone=" + URLEncoder.encode(lxdh_name.getText().toString())
@@ -355,16 +493,35 @@ public class HomeXCDJ2Activity extends Activity {
                     add_sigh_view.setmList(sighPhotos, true);
                 }
                 break;
+            case 167://巡查人员签名
+                if (resultCode == 1) {
+                    xcrysighPhotos.add(new Photo(photonametemp, pathtemp));
+                    xcry_sigh_view.setmList(xcrysighPhotos, true);
+                }
+                break;
             case 147://细则图片
                 if (resultCode == Activity.RESULT_OK) {
                     Bitmap bmp = BitmapFactory.decodeFile(pathtemp);
                     try {
-                        saveFile(compressBySize(pathtemp,1500,2000),pathtemp);
+                        saveFile(compressBySize(pathtemp, 1500, 2000), pathtemp);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-                    photos.add(new Photo(photonametemp,pathtemp));
+                    photos.add(new Photo(photonametemp, pathtemp));
                     take_photo_view.setmList(photos, true);
+                }
+                break;
+            case 148://问题清单图片
+                if (resultCode == Activity.RESULT_OK) {
+                    Bitmap bmp = BitmapFactory.decodeFile(pathtemp);
+                    try {
+                        saveFile(compressBySize(pathtemp, 1500, 2000), pathtemp);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    listQ.get(nowIndexQ).getMlist().add(new Photo(photonametemp, pathtemp));
+//                    questionAdapter.notifyItemChanged(nowIndex);
+                    mAdapter.notifyDataSetChanged();
                 }
                 break;
 

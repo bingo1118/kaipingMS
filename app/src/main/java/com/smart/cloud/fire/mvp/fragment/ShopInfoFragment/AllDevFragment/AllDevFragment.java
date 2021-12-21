@@ -100,9 +100,6 @@ public class AllDevFragment extends MvpFragment<AllSmokePresenter> implements Sh
         privilege = MyApp.app.getPrivilege();
         page = "1";
         list = new ArrayList<>();
-//        if(MyApp.app.getPrivilege()!=1){//@@9.29 1级
-//            smokeTotal.setVisibility(View.VISIBLE);
-//        }
         refreshListView();
         mvpPresenter.getAllSmoke(userID, privilege + "", page,"1", list, 1,false);
         mvpPresenter.getSmokeSummary(userID,privilege+"","","","","1");//@@9.5

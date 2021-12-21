@@ -141,7 +141,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_centerVertical="true"
-                    android:text="巡检人员:" />
+                    android:text="巡查人员:" />
 
                 <RelativeLayout
                     android:layout_width="wrap_content"
@@ -149,18 +149,29 @@
                     android:layout_marginTop="5dp"
                     android:background="@drawable/edit_view_bg2">
 
-                    <EditText
-                        android:id="@+id/xcry_et"
+                    <LinearLayout
+                        android:id="@+id/line3"
                         android:layout_width="match_parent"
-                        android:layout_height="25dp"
-                        android:layout_marginBottom="3dp"
-                        android:layout_marginLeft="10dp"
-                        android:layout_marginRight="10dp"
-                        android:layout_marginTop="3dp"
-                        android:background="@null"
-                        android:textColor="@color/text_view_and_kuang"
-                        android:textColorHint="@color/hint_color_text"
-                        android:textSize="14sp" />
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="5dp"
+                        android:layout_gravity="center_horizontal"
+                        android:orientation="vertical">
+
+                        <com.smart.cloud.fire.view.SighList.AddSighView
+                            android:id="@+id/xcry_sigh_view"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="5dp"
+                            android:text="提示:长按删除图片"
+                            android:textColor="@color/text_color_gray"
+                            android:textSize="12sp"
+                            android:textStyle="italic" />
+
+                    </LinearLayout>
                 </RelativeLayout>
 
             </LinearLayout>
@@ -177,7 +188,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_centerVertical="true"
-                    android:text="巡检时间:" />
+                    android:text="巡查时间:" />
 
                 <RelativeLayout
                     android:layout_width="wrap_content"
@@ -214,12 +225,19 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_centerVertical="true"
-                    android:text="巡检情况:" />
+                    android:text="巡查情况:" />
+
+                <android.support.v7.widget.RecyclerView
+                    android:id="@+id/recycler_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="5dp"/>
 
                 <RelativeLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="5dp"
+                    android:visibility="gone"
                     android:background="@drawable/edit_view_bg2">
 
                     <EditText
@@ -244,6 +262,7 @@
                 android:layout_marginLeft="10dp"
                 android:layout_marginRight="10dp"
                 android:layout_marginTop="10dp"
+                android:visibility="gone"
                 android:orientation="vertical">
 
                 <TextView
