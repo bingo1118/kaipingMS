@@ -17,19 +17,19 @@
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="wrap_content"
-            android:text="未巡检"/>
+            android:text="待巡检"/>
         <RadioButton
             android:id="@+id/status2_rb"
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="wrap_content"
-            android:text="合格"/>
+            android:text="不合格"/>
         <RadioButton
             android:id="@+id/status3_rb"
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="wrap_content"
-            android:text="不合格"/>
+            android:text="合格"/>
     </RadioGroup>
 
     <RadioGroup
@@ -43,13 +43,20 @@
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="wrap_content"
-            android:text="临时任务"/>
+            android:text="临时"/>
+
         <RadioButton
             android:id="@+id/tasktype2_rb"
             android:layout_width="0dp"
-            android:layout_weight="1"
             android:layout_height="wrap_content"
-            android:text="日任务"/>
+            android:layout_weight="1"
+            android:text="日任务" />
+        <RadioButton
+            android:id="@+id/tasktype4_rb"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="周任务" />
         <RadioButton
             android:id="@+id/tasktype3_rb"
             android:layout_width="0dp"

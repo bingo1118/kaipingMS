@@ -190,10 +190,10 @@ public class ItemsListFragment extends MvpFragment<ItemsListPresenter> implement
                         state_temp="1";
                         break;
                     case R.id.status2_rb:
-                        state_temp="3";
+                        state_temp="2";
                         break;
                     case R.id.status3_rb:
-                        state_temp="2";
+                        state_temp="3";
                         break;
                 }
             }
@@ -210,8 +210,11 @@ public class ItemsListFragment extends MvpFragment<ItemsListPresenter> implement
                     case R.id.tasktype2_rb:
                         tasktype_temp="1";
                         break;
-                    case R.id.tasktype3_rb:
+                    case R.id.tasktype4_rb:
                         tasktype_temp="2";
+                        break;
+                    case R.id.tasktype3_rb:
+                        tasktype_temp="3";
                         break;
                 }
             }

@@ -26,6 +26,7 @@ import com.smart.cloud.fire.utils.T;
 import com.smart.cloud.fire.utils.VolleyHelper;
 import com.smart.cloud.fire.view.SighList.AddSighView;
 import com.smart.cloud.fire.view.TakePhoto.Photo;
+import com.smart.cloud.fire.view.TakePhoto.TakePhotosView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -59,6 +60,8 @@ public class InspHIstoryItemActivity extends Activity {
     TextView memo_tv;
     @Bind(R.id.location_photo_iv)
     ImageView location_photo_iv;
+    @Bind(R.id.take_photo_view)
+    TakePhotosView take_photo_view;
     @Bind(R.id.sign_photo_iv)
     ImageView sign_photo_iv;
     @Bind(R.id.add_sigh_view)
@@ -75,8 +78,12 @@ public class InspHIstoryItemActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_insp_history_item);
+try{
+    ButterKnife.bind(this);
+}catch (Exception e){
+    e.printStackTrace();
+}
 
-        ButterKnife.bind(this);
         mContext = this;
         uid=getIntent().getStringExtra("uid");
         prid=getIntent().getStringExtra("prid");
@@ -118,18 +125,27 @@ public class InspHIstoryItemActivity extends Activity {
                                 photos.add(p);
                             }
                             add_sigh_view.setmList(photos,false);
-                            Glide.with(mContext)
-                                    .load(location_img_path)
-                                    .placeholder(R.drawable.photo_ok)
-                                    .into(location_photo_iv);
-                            location_photo_iv.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View view) {
-                                        Intent intent = new Intent(mContext, NFCImageShowActivity.class);
-                                        intent.putExtra("path",location_img_path);
-                                        mContext.startActivity(intent);
-                                }
-                            });
+                            ArrayList<Photo> photos2=new ArrayList<>();
+                            String[] strings2=response.getJSONObject("record").getString("imgs").split("#");
+
+                            for(int i=0;i<strings2.length;i++){
+                                String s_path=ConstantValues.NFC_IMAGES+"cheakImg//"+strings2[i];
+                                Photo p=new Photo(i+"",s_path);
+                                photos2.add(p);
+                            }
+                            take_photo_view.setmList(photos2,false);
+//                            Glide.with(mContext)
+//                                    .load(location_img_path)
+//                                    .placeholder(R.drawable.photo_ok)
+//                                    .into(location_photo_iv);
+//                            location_photo_iv.setOnClickListener(new View.OnClickListener() {
+//                                @Override
+//                                public void onClick(View view) {
+//                                        Intent intent = new Intent(mContext, NFCImageShowActivity.class);
+//                                        intent.putExtra("path",location_img_path);
+//                                        mContext.startActivity(intent);
+//                                }
+//                            });
 
 //                            Glide.with(mContext)
 //                                    .load(sign_img_path)

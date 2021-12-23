@@ -63,6 +63,7 @@ import com.smart.cloud.fire.utils.UploadUtil;
 import com.smart.cloud.fire.utils.VolleyHelper;
 import com.smart.cloud.fire.view.SighList.AddSighView;
 import com.smart.cloud.fire.view.TakePhoto.Photo;
+import com.smart.cloud.fire.view.TakePhoto.TakePhotosView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -105,8 +106,8 @@ public class UploadInspectionInfoActivity extends Activity {
     EditText device_type_name;//@@类型
     @Bind(R.id.memo_name)
     EditText memo_name;//@@备注
-    @Bind(R.id.photo_image)
-    ImageView photo_image;//@@拍照上传
+    @Bind(R.id.take_photo_view)
+    TakePhotosView take_photo_view;
     @Bind(R.id.memo_iv)
     ImageView memo_iv;
     @Bind(R.id.memo_tv)
@@ -353,8 +354,48 @@ public class UploadInspectionInfoActivity extends Activity {
 
     private String signName="";
     Uri imageFileUri;
+    List<Photo> photos = new ArrayList<>();
 
     private void initView() {
+        take_photo_view.setmList(photos, true);
+        take_photo_view.setmOnClickListener2(new TakePhotosView.OnClickListener2() {
+            @Override
+            public void onItemClick(int position) {
+                if(photos.size()==3){
+                    T.showShort(mContext,"最多提供三张照片");
+                    return;
+                }
+                nowIndex = position;
+                photonametemp = System.currentTimeMillis() + "";
+                pathParent = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator
+                        + "uploadtemp" + File.separator;
+                File fileParent = new File(pathParent);
+                if (!fileParent.exists()) {
+                    fileParent.mkdirs();
+                }
+                pathtemp = pathParent + photonametemp + ".jpg";
+                File file = new File(pathtemp);
+                if (!file.exists()) {
+                    try {
+                        file.createNewFile();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+                Uri imageFileUri = Uri.fromFile(file);//获取文件的Uri
+                Intent it = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);//跳转到相机Activity
+                it.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, imageFileUri);//告诉相机拍摄完毕输出图片到指定的Uri
+                ((Activity) mContext).startActivityForResult(it, 102);
+            }
+        });
+        take_photo_view.setmOnLongClickListener(new TakePhotosView.OnLongClickListener() {
+            @Override
+            public void onItemLongClick(Photo photo, int i) {
+                sighPhotos.remove(i);
+                add_sigh_view.setmList(sighPhotos, true);
+            }
+        });
+
         add_sigh_view.setmList(sighPhotos,true);
         add_sigh_view.setmOnClickListener(new AddSighView.OnClickListener() {
             @Override
@@ -464,14 +505,7 @@ public class UploadInspectionInfoActivity extends Activity {
                                 sighString+="#";
                             }
                         }
-                        if(imageFilePath!=null){
-                            File file = new File(imageFilePath); //这里的path就是那个地址的全局变量
-                            uploadTime=System.currentTimeMillis()+"";
-                            if(f.exists()){
-                                isHavePhoto=true;
-                            }//@@11.07
-                            isSuccess= UploadUtil.uploadFile(file,userID,areaId,uploadTime,"","cheakImg");
-                        }
+
                         if(listQ!=null){
                             for(Question q:listQ){
                                 for(Photo p:q.getPhotos()){
@@ -480,6 +514,30 @@ public class UploadInspectionInfoActivity extends Activity {
                                         showToastOnUiThread("图片上传失败，请重试");
                                     }
                                 }
+                            }
+                        }
+
+                        for (int i = 0; i < photos.size(); i++) {
+                            File file = new File(photos.get(i).getPath());
+                            if (file.exists()) {
+                                signName = photos.get(i).getName();
+                                if (UploadUtil.uploadFile(file, userID, areaId, signName, "", "cheakImg")) {
+                                } else {
+                                    showToastOnUiThread("巡查图片上传失败");
+                                    dismissProgressBarOnUiThread();
+                                    return;
+                                }
+                                showToastOnUiThread("巡查图片上传完成");
+                                isSuccess=true;
+                                isHavePhoto=true;
+                            }//@@11.07
+                        }
+
+                        String photoString="";
+                        for (int i = 0; i < photos.size(); i++) {
+                            photoString += photos.get(i).getName() + ".jpg";
+                            if (i != (photos.size()-1)) {
+                                photoString += "#";
                             }
                         }
 
@@ -492,12 +550,12 @@ public class UploadInspectionInfoActivity extends Activity {
                                 //"cheakImg"图片路径
                                 url= ConstantValues.SERVER_IP_NEW+"updateResult?tuid="+tuid+"&uid="+uid_name.getText().toString()
                                         +"&tid="+tid+"&qualified="+deviceState+"&desc="+ URLEncoder.encode(memo_name.getText().toString())
-                                        +"&photo1="+uploadTime+imageFilePath.substring(imageFilePath.lastIndexOf("."));
+                                        +"&photo1="+URLEncoder.encode(photoString);
                             }else{
 
                                 url= ConstantValues.SERVER_IP_NEW+"postResult?workerId="+userID+"&uid="+uid_name.getText().toString()
                                         +"&tid="+tid+"&pid="+pid+"&qualified="+deviceState+"&desc="+ URLEncoder.encode(memo_name.getText().toString())
-                                        +"&imgs="+uploadTime+imageFilePath.substring(imageFilePath.lastIndexOf("."))
+                                        +"&imgs="+URLEncoder.encode(photoString)
                                         +"&questionJson="+URLEncoder.encode(finalAnswer)+"&startdate="+startdate+"&enddate="+enddate+"&taskType="+tasktype
                                         +"&signature="+URLEncoder.encode(sighString);
 
@@ -574,25 +632,6 @@ public class UploadInspectionInfoActivity extends Activity {
             }
         });
 
-        photo_image.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                imageFilePath = Environment.getExternalStorageDirectory().getAbsolutePath()+"/filename.jpg";
-                File temp = new File(imageFilePath);
-                if(!temp.exists()){
-                    Uri imageFileUri = Uri.fromFile(temp);//获取文件的Uri
-                    Intent it = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);//跳转到相机Activity
-                    it.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, imageFileUri);//告诉相机拍摄完毕输出图片到指定的Uri
-                    startActivityForResult(it, 102);
-                }else{
-                    //使用Intent
-                    Intent intent = new Intent(Intent.ACTION_VIEW);
-                    intent.setDataAndType(Uri.fromFile(temp), "image/*");
-                    startActivity(intent);
-                }
-
-            }
-        });
 
         RadioGroup group = (RadioGroup)this.findViewById(R.id.radio_group);
         group.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
@@ -629,7 +668,6 @@ public class UploadInspectionInfoActivity extends Activity {
         area_name.setText("");
         device_type_name.setText("");
         memo_name.setText("");
-        photo_image.setBackgroundResource(R.drawable.add_nfc_recor);
         imageFilePath=null;
     }
 
@@ -677,52 +715,16 @@ public class UploadInspectionInfoActivity extends Activity {
                     questionAdapter.notifyDataSetChanged();
                 }
                 break;
-            case 102://环境图片
+            case 102:
                 if (resultCode == Activity.RESULT_OK) {
+                    Bitmap bmp = BitmapFactory.decodeFile(pathtemp);
                     try {
-                        saveFile(compressBySize(imageFilePath,1500,2000),imageFilePath);
+                        saveFile(compressBySize(pathtemp, 1500, 2000), pathtemp);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-                    Bitmap bmp = BitmapFactory.decodeFile(imageFilePath);
-                    DisplayMetrics dm = new DisplayMetrics();
-                    getWindowManager().getDefaultDisplay().getMetrics(dm);
-                    int screenWidth=dm.widthPixels;
-                    if(bmp.getWidth()<=screenWidth){
-                        photo_image.setImageBitmap(bmp);
-                    }else{
-                        Bitmap mp=Bitmap.createScaledBitmap(bmp, screenWidth, bmp.getHeight()*screenWidth/bmp.getWidth(), true);
-                        photo_image.setImageBitmap(mp);
-                    }
-                }
-                break;
-            case 103:
-                Bitmap bm = null;
-                // 外界的程序访问ContentProvider所提供数据 可以通过ContentResolver接口
-                ContentResolver resolver = getContentResolver();
-
-                try {
-                    Uri originalUri = data.getData(); // 获得图片的uri
-
-                    bm = MediaStore.Images.Media.getBitmap(resolver, originalUri); // 显得到bitmap图片
-
-                    // 这里开始的第二部分，获取图片的路径：
-
-                    String[] proj = {MediaStore.Images.Media.DATA};
-
-                    // 好像是android多媒体数据库的封装接口，具体的看Android文档
-                    @SuppressWarnings("deprecation")
-                    Cursor cursor = managedQuery(originalUri, proj, null, null, null);
-                    // 按我个人理解 这个是获得用户选择的图片的索引值
-                    int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-                    // 将光标移至开头 ，这个很重要，不小心很容易引起越界
-                    cursor.moveToFirst();
-                    // 最后根据索引值获取图片路径
-                    String path = cursor.getString(column_index);
-                    photo_image.setImageURI(originalUri);
-
-                } catch (IOException e) {
-                    e.printStackTrace();
+                    photos.add(new Photo(photonametemp, pathtemp));
+                    take_photo_view.setmList(photos, true);
                 }
                 break;
         }

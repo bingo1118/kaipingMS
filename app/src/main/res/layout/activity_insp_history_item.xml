@@ -101,7 +101,12 @@
                     android:scaleType="fitXY"
                     android:layout_width="75dp"
                     android:layout_height="75dp"
-                    android:layout_margin="5dp" />
+                    android:layout_margin="5dp"
+                    android:visibility="gone"/>
+                <com.smart.cloud.fire.view.TakePhoto.TakePhotosView
+                    android:id="@+id/take_photo_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
             </LinearLayout>
 
             <LinearLayout

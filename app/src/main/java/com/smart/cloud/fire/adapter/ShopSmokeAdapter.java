@@ -625,6 +625,7 @@ public class ShopSmokeAdapter extends RecyclerView.Adapter<RecyclerView.ViewHold
                         }
                     });
                     break;
+                case 200:
                 case 125:
                 case 100://南京防爆水压
                 case 97://南京普通水压
